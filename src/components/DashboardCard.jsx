@@ -13,7 +13,7 @@ export default function DashboardCard({ title, icon, onRefresh, loading, childre
           disabled={loading}
           title="Refresh Data"
         >
-          {loading ? '...' : '↻'}
+          {loading ? 'Refreshing...' : 'Refresh'}
         </button>
       </div>
       <div className="widget-content">

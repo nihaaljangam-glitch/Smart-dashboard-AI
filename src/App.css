@@ -2,6 +2,7 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
+  padding-bottom: 600px; /* Massive padding so all widgets can scroll completely above the 550px open chat window */
   position: relative;
   min-height: 100vh;
 }
@@ -64,25 +65,25 @@
 .refresh-btn {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--border-card);
-  color: var(--text-muted);
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+  color: var(--text-main);
+  padding: 0.4rem 1rem;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
 }
 
 .refresh-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--text-main);
-  transform: rotate(45deg);
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
 }
 
 .refresh-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-  transform: none;
 }
 
 .widget-content {

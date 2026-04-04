@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-const OPENROUTER_API_KEY = "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";
+const OPENROUTER_API_KEY = import.meta.env.OPENROUTER_API_KEY || import.meta.env.VITE_OPENROUTER_API_KEY || "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";
 
 export default function Chatbot({ liveData }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -20,24 +20,27 @@ export default function Chatbot({ liveData }) {
   const getSystemContext = () => {
     const { weather, currency, citizen, fact } = liveData;
 
-    let context = `You are a helpful SmartCity assistant.\nAnswer only based on the following live data from the dashboard:\n\n`;
+    const liveContext = `
+  You are a helpful SmartCity assistant. 
+  Answer only based on the following live data from the dashboard:
 
-    if (weather) {
-      context += `WEATHER: Temperature is ${weather.temperature}°C,\nWind speed is ${weather.windspeed} km/h\n\n`;
-    }
-    if (currency) {
-      context += `CURRENCY: 1 INR = ${currency.USD} USD,\n1 INR = ${currency.EUR} EUR,\n1 INR = ${currency.GBP} GBP\n\n`;
-    }
-    if (citizen) {
-      context += `CITIZEN ON SCREEN: ${citizen.name},\nfrom ${citizen.city},\nemail: ${citizen.email}\n\n`;
-    }
-    if (fact) {
-      context += `CITY FACT: ${fact.text}\n\n`;
-    }
+  WEATHER: Temperature is ${weather?.temperature || 'Loading...'}°C, 
+           Wind speed is ${weather?.windspeed || 'Loading...'} km/h
 
-    context += `If the user asks something not related to this data, politely say you only know about the dashboard data. Do not make up any other information. Keep answers conversational but brief.`;
+  CURRENCY: 1 INR = ${currency?.USD || 'Loading...'} USD, 
+            1 INR = ${currency?.EUR || 'Loading...'} EUR, 
+            1 INR = ${currency?.GBP || 'Loading...'} GBP
 
-    return context;
+  CITIZEN ON SCREEN: ${citizen?.name || 'Loading...'}, 
+                     from ${citizen?.city || 'Loading...'}, 
+                     email: ${citizen?.email || 'Loading...'}
+
+  CITY FACT: ${fact?.text || 'Loading...'}
+
+  If the user asks something not related to this data, 
+  politely say you only know about the dashboard data.
+`;
+    return liveContext;
   };
 
   const sendMessage = async (e) => {
@@ -50,26 +53,31 @@ export default function Chatbot({ liveData }) {
     setIsLoading(true);
 
     try {
+      // Filter out the initial greeting to strictly follow user -> assistant role sequence and prevent 400 errors
+      const conversation = messages.filter((m, i) => i !== 0 || m.role !== 'assistant');
+
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
           'Content-Type': 'application/json',
-          'HTTP-Referer': window.location.href,
+          'HTTP-Referer': window.location.origin,
           'X-Title': 'SmartCity Dashboard',
         },
         body: JSON.stringify({
-          model: 'google/gemini-2.5-flash-free',
+          model: 'openrouter/auto',
           messages: [
             { role: 'system', content: getSystemContext() },
-            ...messages.map(m => ({ role: m.role, content: m.content })),
+            ...conversation.map(m => ({ role: m.role, content: m.content })),
             userMessage
           ]
         })
       });
 
       if (!response.ok) {
-        throw new Error(`API Error: ${response.status}`);
+        const errorText = await response.text();
+        console.error("OpenRouter API Error:", errorText);
+        throw new Error(`API Error: ${response.status}. ${errorText}`);
       }
 
       const data = await response.json();

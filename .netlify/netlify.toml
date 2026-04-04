@@ -10,7 +10,6 @@ redirects = []
 publish = "/Users/nihaljangam/.gemini/antigravity/scratch/smartcity-dashboard/dist"
 publishOrigin = "ui"
 commandOrigin = "ui"
-base = "/Users/nihaljangam/.gemini/antigravity/scratch/smartcity-dashboard"
 command = "npm run build"
 
 [build.environment]

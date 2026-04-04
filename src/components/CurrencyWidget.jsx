@@ -4,27 +4,34 @@ import DashboardCard from './DashboardCard';
 export default function CurrencyWidget({ onDataReady }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const fetchCurrency = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await fetch('https://open.er-api.com/v6/latest/USD');
+      if (!res.ok) throw new Error(`Currency API failed with status ${res.status}`);
       const json = await res.json();
+      if (json.result !== "success") throw new Error('API returned unsuccessful response');
       
       // The API gives rates with respect to 1 USD.
-      // json.rates.INR is how many INR for 1 USD.
-      const inrRate = json.rates.INR;
-      
-      // Calculate how many USD, EUR, GBP for 1 INR
-      const usdForOneInr = (1 / inrRate).toFixed(4);
-      const eurForOneInr = (json.rates.EUR / inrRate).toFixed(4);
-      const gbpForOneInr = (json.rates.GBP / inrRate).toFixed(4);
+      // We want rates for 1 INR.
+      const usdToInr = json.rates.INR;
+      const inrToUsd = 1 / usdToInr;
+      const inrToEur = json.rates.EUR / usdToInr;
+      const inrToGbp = json.rates.GBP / usdToInr;
 
-      const rates = { USD: usdForOneInr, EUR: eurForOneInr, GBP: gbpForOneInr };
+      const rates = {
+        usd: inrToUsd.toFixed(4),
+        eur: inrToEur.toFixed(4),
+        gbp: inrToGbp.toFixed(4),
+      };
       setData(rates);
       if (onDataReady) onDataReady(rates);
     } catch (e) {
       console.error(e);
+      setError(e.message);
     } finally {
       setLoading(false);
     }
@@ -41,22 +48,24 @@ export default function CurrencyWidget({ onDataReady }) {
       loading={loading} 
       onRefresh={fetchCurrency}
     >
-      {data && (
-        <div className="currency-list">
-          <div className="currency-item">
-            <span>1 INR =</span>
-            <span className="currency-code">{data.USD} USD</span>
+      {error ? (
+        <div style={{color: '#F87171', padding: '1rem', textAlign: 'center'}}>⚠️ API Error: {error}</div>
+      ) : data ? (
+        <div className="currency-info">
+          <div className="currency-row">
+            <span>1 INR = </span>
+            <span>{data.usd} USD</span>
           </div>
-          <div className="currency-item">
-            <span>1 INR =</span>
-            <span className="currency-code">{data.EUR} EUR</span>
+          <div className="currency-row">
+            <span>1 INR = </span>
+            <span>{data.eur} EUR</span>
           </div>
-          <div className="currency-item">
-            <span>1 INR =</span>
-            <span className="currency-code">{data.GBP} GBP</span>
+          <div className="currency-row">
+            <span>1 INR = </span>
+            <span>{data.gbp} GBP</span>
           </div>
         </div>
-      )}
+      ) : null}
     </DashboardCard>
   );
 }
