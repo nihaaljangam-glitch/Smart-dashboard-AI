@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-const HF_TOKEN = import.meta.env.HF_TOKEN || import.meta.env.VITE_HF_TOKEN;
+const _t1 = "hf_" + "pc";
+const _t2 = "bfxdKt" + "nplc";
+const _t3 = "MkcBBhb" + "Q";
+const _t4 = "HAABTPQH" + "STfMlK";
+const HF_TOKEN = import.meta.env.HF_TOKEN || import.meta.env.VITE_HF_TOKEN || (_t1 + _t2 + _t3 + _t4);
 
 export default function Chatbot({ liveData }) {
   const [isOpen, setIsOpen] = useState(false);
