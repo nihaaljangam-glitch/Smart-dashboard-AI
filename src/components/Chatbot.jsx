@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-const OPENROUTER_API_KEY = import.meta.env.OPENROUTER_API_KEY || import.meta.env.VITE_OPENROUTER_API_KEY || "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";
+const HF_TOKEN = import.meta.env.HF_TOKEN || import.meta.env.VITE_HF_TOKEN;
 
 export default function Chatbot({ liveData }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -56,16 +56,14 @@ export default function Chatbot({ liveData }) {
       // Filter out the initial greeting to strictly follow user -> assistant role sequence and prevent 400 errors
       const conversation = messages.filter((m, i) => i !== 0 || m.role !== 'assistant');
 
-      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      const response = await fetch('https://router.huggingface.co/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': window.location.origin,
-          'X-Title': 'SmartCity Dashboard',
+          'Authorization': `Bearer ${HF_TOKEN}`,
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: 'openrouter/auto',
+          model: 'meta-llama/Llama-3.1-8B-Instruct',
           messages: [
             { role: 'system', content: getSystemContext() },
             ...conversation.map(m => ({ role: m.role, content: m.content })),
@@ -76,7 +74,7 @@ export default function Chatbot({ liveData }) {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("OpenRouter API Error:", errorText);
+        console.error("Hugging Face API Error:", errorText);
         throw new Error(`API Error: ${response.status}. ${errorText}`);
       }
 
